@@ -16,6 +16,7 @@ fun AcogidaApp(viewModel: AcogidaViewModel = viewModel()) {
     val navController = rememberNavController()
     val uiState by viewModel.uiState.collectAsState()
     val formulario by viewModel.formulario.collectAsState()
+    val solicitudes by viewModel.solicitudes.collectAsState()
 
     NavHost(navController = navController, startDestination = "lista") {
 
@@ -23,10 +24,13 @@ fun AcogidaApp(viewModel: AcogidaViewModel = viewModel()) {
             PantallaLista(
                 uiState = uiState,
                 onCambiarUrgentes = viewModel::cambiarSoloUrgentes,
-                onAnimalClick = { animal -> navController.navigate("detalle/${animal.id}") }
+                onAnimalClick = { animal -> navController.navigate("detalle/${animal.id}") },
+                onVerSolicitudes = { navController.navigate("solicitudes") },
+                onBuscar = viewModel::cambiarBusqueda
                 // TODO Paso 10: onBuscar
             )
         }
+        composable("solicitudes") { PantallaSolicitudes(solicitudes = solicitudes, onVolver = { navController.popBackStack() }) }
 
         composable(
             route = "detalle/{animalId}",
@@ -48,14 +52,15 @@ fun AcogidaApp(viewModel: AcogidaViewModel = viewModel()) {
             arguments = listOf(navArgument("animalId") { type = NavType.IntType })
         ) { entrada ->
             val id = entrada.arguments?.getInt("animalId") ?: -1
+            val animal = viewModel.buscarAnimal(id);
             PantallaSolicitud(
-                animal = viewModel.buscarAnimal(id),
+                animal = animal,
                 form = formulario,
                 onNombreChange = viewModel::cambiarNombre,
                 onEmailChange = viewModel::cambiarEmail,
                 onTelefonoChange = viewModel::cambiarTelefono,
                 onAceptaChange = viewModel::cambiarAcepta,
-                onEnviar = viewModel::enviarSolicitud,
+                onEnviar = { viewModel.enviarSolicitud(animal) },
                 onVolver = { navController.popBackStack() },
                 onTerminar = { navController.popBackStack("lista", inclusive = false) }
             )

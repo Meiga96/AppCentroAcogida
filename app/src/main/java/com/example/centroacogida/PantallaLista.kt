@@ -1,19 +1,25 @@
 package com.example.centroacogida
 
+import com.example.centroacogida.ui.theme.CentroAcogidaTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 // PantallaLista.kt
@@ -22,23 +28,41 @@ import androidx.compose.ui.unit.dp
 fun PantallaLista(
     uiState: AcogidaUiState,
     onCambiarUrgentes: (Boolean) -> Unit,
-    onAnimalClick: (Animal) -> Unit
+    onAnimalClick: (Animal) -> Unit,
+    onVerSolicitudes: () -> Unit = {},
+    onBuscar: (String) -> Unit = {}
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Centro de acogida") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Centro de acogida") },   // o el título que pusiste en el paso 3
+                actions = { TextButton(onClick = onVerSolicitudes) { Text("Mis solicitudes") } }
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
+            OutlinedTextField(
+                value = uiState.textoBusqueda,
+                onValueChange = onBuscar,
+                label = { Text("Buscar por nombre") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
             // TODO Paso 10: el campo «Buscar por nombre»
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Adopciones urgentes", modifier = Modifier.weight(1f))
                 Switch(checked = uiState.soloUrgentes, onCheckedChange = onCambiarUrgentes)
             }
             // TODO Paso 8: cambiar la LazyColumn por una LazyVerticalGrid adaptativa.
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 320.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 items(uiState.animalesVisibles, key = { it.id }) { animal ->
                     TarjetaAnimal(animal = animal, onClick = { onAnimalClick(animal) })
                 }
@@ -47,5 +71,11 @@ fun PantallaLista(
     }
 }
 
-
 // TODO Paso 8: añadir una vista previa con ancho de tableta.
+@Preview(name = "Tableta", widthDp = 840, heightDp = 1200, showBackground = true)
+@Composable
+fun ListaTabletaPreview() {
+    CentroAcogidaTheme {
+        PantallaLista(uiState = AcogidaUiState(), onCambiarUrgentes = {}, onAnimalClick = {})
+    }
+}

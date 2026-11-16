@@ -1,19 +1,31 @@
 package com.example.centroacogida
 
 // AcogidaViewModel.kt
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 
-class AcogidaViewModel : ViewModel() {
+class AcogidaViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val dao = AcogidaDatabase.obtener(application).solicitudDao()
     private val _uiState = MutableStateFlow(AcogidaUiState())
     val uiState: StateFlow<AcogidaUiState> = _uiState.asStateFlow()
 
+    val solicitudes: StateFlow<List<Solicitud>> = dao.todas()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     fun cambiarSoloUrgentes(valor: Boolean) {
         _uiState.update { it.copy(soloUrgentes = valor) }
+    }
+    fun cambiarBusqueda(texto: String) {
+        _uiState.update { it.copy(textoBusqueda = texto) }
     }
 
     // TODO Paso 10: cambiarBusqueda
@@ -37,8 +49,19 @@ class AcogidaViewModel : ViewModel() {
 
     fun cambiarAcepta(valor: Boolean) = _formulario.update { it.copy(aceptaCondiciones = valor) }
 
-    fun enviarSolicitud() {
+    fun enviarSolicitud(animal: Animal?) {
+        val f = _formulario.value
         _formulario.update { it.copy(intentadoEnviar = true, enviado = it.esValido) }
+        if (f.esValido && animal != null) {
+            viewModelScope.launch {   // en segundo plano
+                dao.insertar(
+                    Solicitud(
+                        animalId = animal.id, animalNombre = animal.nombre,
+                        nombre = f.nombre, email = f.email, telefono = f.telefono
+                    )
+                )
+            }
+        }
     }
 
     fun reiniciarFormulario() {

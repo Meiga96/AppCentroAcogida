@@ -3,9 +3,12 @@ package com.example.centroacogida
 // AcogidaUiState.kt
 data class AcogidaUiState(
     val animales: List<Animal> = DatosAnimales.animales,
-    val soloUrgentes: Boolean = false
+    val soloUrgentes: Boolean = false,
+    val textoBusqueda: String = ""
     // TODO Paso 10: el texto de búsqueda
 ) {
     val animalesVisibles: List<Animal>
-        get() = if (soloUrgentes) animales.filter { it.urgente } else animales
+        get() = animales
+            .filter { !soloUrgentes || it.urgente }
+            .filter { it.nombre.contains(textoBusqueda.trim(), ignoreCase = true) }
 }
