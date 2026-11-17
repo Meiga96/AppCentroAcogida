@@ -1,25 +1,40 @@
 1. ¿Qué hace el Sync de Gradle? ¿Qué se pone en gradle/libs.versions.toml y qué en app/build.gradle.kts? Para añadir Navigation Compose, ¿qué cambiaste en cada uno?
-
+El sync lee los .gradle descarga dependencias y plugins. En versions.toml es el catálogo de versiones. Gradle.kts dice qué usa el módulo. Se cambió en el toml un version un libraries y en gradle kts un implementation 
 2. La biblioteca de iconos (material-icons-core) no lleva versión. ¿Quién la fija y para qué sirve?
-
+La biblioteca de iconos la fija el BOM de Compose y garantiza que todas las bibliotecas de Compose sean compatibles entre sí.
 3. La plantilla tiene minSdk = 24. ¿Qué significa? ¿En qué dispositivos se puede instalar la app?
-
+Nivel de API minimo que se exige para poder ser instalada, asi que dispositivos Android 7.0 o superior.
 4. ¿Para qué sirve Logcat? ¿Qué hace Log.d(TAG, "onStart") y para qué sirve el filtro tag:Ciclo?
-
+Es la consola que muestra mensajes del sistema y de la app. onStart escribe un mensaje de depuración con la etiqueta TAG y el filtro muestra solo mensajes de esa etiqueta.
 5. ¿Qué hay en cada uno de estos archivos del proyecto: Animal.kt, DatosAnimales.kt, TarjetaAnimal.kt, PantallaLista.kt, PantallaDetalle.kt, PantallaSolicitud.kt, AcogidaUiState.kt, FormularioUiState.kt, AcogidaViewModel.kt, AcogidaApp.kt y MainActivity.kt?
-
+En Animal.kt data class con datos de animales, 
+DatosAnimales.kt tiene la lista de animales de ejemplo, 
+TarjetaAnimal es un composable de una tarjeta de la lista, 
+PantallaLista lista de animales y filtro.
+PantallaDetalle detalle de animales
+PantallaSolicitud formulario de adopción
+AcogidaUiState estado de la lista 
+FormularioUiState estado del formulario y sus errores
+AcogidaViewModel guarda el estado la lógica
+AcogidaApp NavHost y rutas
+Main punto de entrada, llama a setContent
 6. Al girar el móvil, ¿qué métodos del ciclo de vida salen en Logcat y en qué orden? ¿Por qué con remember el interruptor «Adopciones urgentes» volvía a estar desactivado y con el ViewModel no?
-
+Como se destruye la actividad y se vuelve a crear aparecen, onPause, onStop, onCreate, onStart y onResume, remember guarda el estado en la composición pero se pierde al recrear por eso el interruptor pasa a desactivado, ViewModel sobrevive a esa rotación y conserva el estado.
 7. ¿Qué es un composable? En TarjetaAnimal, ¿para qué sirve el parámetro modifier? ¿Y Modifier.padding(innerPadding) en la pantalla de lista?
-
+Es una función que describe parte de la interfaz. modifier permite cambiar forma tamaño márgenes.... el padding aplica unos márgenes para adaptar como se distribuye el contenido y nada quede tapado.
 8. ¿Qué hace remember? ¿Qué es la recomposición y cuándo ocurre?
-
+Como hemos visto en la anterior pregunta guarda un valor en composición, recomposición vuelve a ejecutar los composables cuando cambia un estado que leen.
 9. Pega este código en MainActivity.kt, dentro de onCreate, justo después de super.onCreate(savedInstanceState) (borra antes el código de la pregunta anterior). Ejecuta la app y copia los mensajes de Logcat con el filtro tag:Pregunta.
 val luna = Animal(1, "Luna", "Perro", 3, R.drawable.ic_launcher_foreground, urgente = true)
 val copia = luna.copy(edad = 4)
 Log.d("Pregunta", "${luna.nombre}, ${luna.edad} -> ${copia.nombre}, ${copia.edad}")
 Log.d("Pregunta", "Iguales: ${luna == luna.copy()}, ${luna == copia}")
 Log.d("Pregunta", "Descripción: '${luna.descripcion}'")
+
+Luna, 3 -> Luna, 4
+Iguales: true, false
+Descripción: ''
+
 10. Pega este código en MainActivity.kt, dentro de onCreate, justo después de super.onCreate(savedInstanceState) (borra antes el código de la pregunta anterior). Ejecuta la app y copia los mensajes de Logcat con el filtro tag:Pregunta.
 val animales = listOf(
 Animal(1, "Luna", "Perro", 3, R.drawable.ic_launcher_foreground, urgente = true),
@@ -31,8 +46,13 @@ val buscado: Animal? = animales.find { it.id == 7 }
 Log.d("Pregunta", "Urgentes: ${urgentes.size}")
 Log.d("Pregunta", "id 7: ${buscado?.nombre ?: "Desconocido"}")
 Log.d("Pregunta", "Edad del id 7: ${buscado?.edad}")
-11. En la lista se escribe items(uiState.animalesVisibles, key = { it.id }). ¿Para qué sirve key? ¿Qué pasa si dos animales tienen el mismo id?
 
+Urgentes: 2
+id 7: Desconocido
+Edad del id 7: null
+
+11. En la lista se escribe items(uiState.animalesVisibles, key = { it.id }). ¿Para qué sirve key? ¿Qué pasa si dos animales tienen el mismo id?
+key da una identidad estable de manera que Compose reutilice bien los elementos y conserve su estado si la lista cambia, si hay ids repetidos al app se cierra con error por claves duplicadas.
 12. En AcogidaViewModel, ¿por qué hay dos variables, _uiState (MutableStateFlow, privada) y uiState (StateFlow, pública)? ¿Qué hace _uiState.update { it.copy(soloUrgentes = valor) }?
 
 13. Pega este código en MainActivity.kt, dentro de onCreate, justo después de super.onCreate(savedInstanceState) (borra antes el código de la pregunta anterior). Ejecuta la app y copia los mensajes de Logcat con el filtro tag:Pregunta.
@@ -46,12 +66,17 @@ val urgente = estado.copy(soloUrgentes = true)
 Log.d("Pregunta", "Visibles: ${estado.animalesVisibles.size} y ${urgente.animalesVisibles.size}")
 Log.d("Pregunta", "Solo urgentes: ${estado.soloUrgentes} y ${urgente.soloUrgentes}")
 Log.d("Pregunta", "Animales: ${estado.animales.size} y ${urgente.animales.size}")
+
+Visibles: 2 y 1
+Solo urgentes: false y true
+Animales: 2 y 2
+
 14. Las pantallas (PantallaLista, PantallaDetalle, PantallaSolicitud) no reciben el ViewModel ni el navController: reciben el estado y lambdas. ¿Qué es el flujo unidireccional de datos? ¿Qué se gana haciéndolo así?
-
+Flujo unidireccional implica que el estado baja hacia la interfaz y los eventos suben mediante lambdas. Lo que se gana haciéndolo así son pantallas reutilizables y fáciles de previsualizar y probar.
 15. La lista navega con navController.navigate("detalle/${animal.id}") y el destino tiene la ruta "detalle/{animalId}". ¿Cómo llega el id del animal a PantallaDetalle? ¿Qué se ve si llega un id que no existe?
-
+Si el id, no existe, da null y saca un mensaje informativo.
 16. En la lista pulsas en Misi y, en su detalle, «Solicitar adopción». ¿Qué pantallas hay en la pila de navegación? ¿A dónde lleva la flecha de «Volver» (popBackStack())? ¿Y el botón «Volver a la lista» (popBackStack("lista", inclusive = false))?
-
+La pila es lista → detalle(Misi) → solicitud. La flecha de volver (popBackStack()) quita la pantalla actual y lleva al detalle. popBackStack("lista", inclusive = false) quita todo hasta lista sin quitarla, y lleva a la lista.
 17. Pega este código en MainActivity.kt, dentro de onCreate, justo después de super.onCreate(savedInstanceState) (borra antes el código de la pregunta anterior). Ejecuta la app y copia los mensajes de Logcat con el filtro tag:Pregunta.
 
 val form = FormularioUiState(nombre = "Ana", email = "ana@correo", telefono = "612345678")
@@ -60,6 +85,13 @@ Log.d("Pregunta", "Correo: ${form.errorEmail}")
 Log.d("Pregunta", "Teléfono: ${form.errorTelefono}")
 Log.d("Pregunta", "Condiciones: ${form.errorCondiciones}")
 Log.d("Pregunta", "Válido: ${form.esValido}")
+
+Nombre: null
+Correo: <mensaje de error>
+Teléfono: null
+Condiciones: <mensaje de error>
+Válido: false
+
 18. Pega este código en MainActivity.kt, dentro de onCreate, justo después de super.onCreate(savedInstanceState) (borra antes el código de la pregunta anterior). Ejecuta la app y copia los mensajes de Logcat con el filtro tag:Pregunta.
 val vm = AcogidaViewModel()
 vm.cambiarTelefono("612")
@@ -71,8 +103,15 @@ vm.enviarSolicitud()
 Log.d("Pregunta", "3: ${vm.formulario.value.intentadoEnviar} ${vm.formulario.value.enviado}")
 vm.reiniciarFormulario()
 Log.d("Pregunta", "4: '${vm.formulario.value.telefono}' ${vm.formulario.value.intentadoEnviar}")
-19. Cuenta, paso a paso, qué pasa desde que escribes una cifra en el campo «Teléfono» hasta que aparece en pantalla. Di qué función de qué archivo se ejecuta en cada paso. ¿Por qué no se puede escribir una letra?
 
+1: 612
+2: 612
+3: true false
+4: '' false
+
+19. Cuenta, paso a paso, qué pasa desde que escribes una cifra en el campo «Teléfono» hasta que aparece en pantalla. Di qué función de qué archivo se ejecuta en cada paso. ¿Por qué no se puede escribir una letra?
+PantallaSolicitud recibe el texto, AcogidaApp lambda llama a viewModel.cambiarTelefono(texto),
+AcogidaViewModel filtra dígitos y el StateFlow emite el estado nuevo y collectAsState lo lee, se recompone el campo con el valor nuevo.
 20. Cuenta, paso a paso, qué pasa al pulsar «Enviar» con el formulario vacío: qué función se ejecuta, qué cambia en el estado y por qué ahora sí se ven los errores. ¿Para qué se llama a viewModel.reiniciarFormulario() antes de abrir el formulario?
 
 Cuestiones sobre los apuntes
