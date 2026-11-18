@@ -26,8 +26,10 @@ fun AcogidaApp(viewModel: AcogidaViewModel = viewModel()) {
                 onCambiarUrgentes = viewModel::cambiarSoloUrgentes,
                 onAnimalClick = { animal -> navController.navigate("detalle/${animal.id}") },
                 onVerSolicitudes = { navController.navigate("solicitudes") },
-                onBuscar = viewModel::cambiarBusqueda
+                onBuscar = viewModel::cambiarBusqueda,
                 // TODO Paso 10: onBuscar
+                // TODO 11.6 onRecargar
+                onRecargar = viewModel::cargarAnimales
             )
         }
         composable("solicitudes") { PantallaSolicitudes(solicitudes = solicitudes, onVolver = { navController.popBackStack() }) }

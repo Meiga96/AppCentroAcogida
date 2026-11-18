@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -104,14 +106,19 @@ fun PantallaDetalle(
 fun FotoDelAnimal(animal: Animal) {
     val context = LocalContext.current
     // rememberSaveable: la foto y el aviso no se pierden al girar la pantalla
-    var foto by rememberSaveable { mutableStateOf<Bitmap?>(null) }
+    // TODO Paso 14.2 cambiar foto para que al abrir detalle cargue la foto guardada
+    var foto by remember { mutableStateOf(cargarFoto(context, animal.id)) }
     var aviso by rememberSaveable { mutableStateOf<String?>(null) }
-
+    // TODO Paso 14.2 cambiar lanzador para que recorte, guarde y avise:
     // Abre la cámara del sistema y devuelve una foto pequeña (o null si se cancela)
-    val hacerFoto =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-            foto = bitmap
+    val hacerFoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            val cuadrada = recortarCuadrado(bitmap)                     // procesar
+            val archivo = guardarComoJpeg(context, cuadrada, animal.id) // convertir y guardar
+            foto = cuadrada
+            aviso = "Foto guardada: ${archivo.name}, ${archivo.length() / 1024} KB"
         }
+    }
     // Muestra el diálogo del sistema «¿Permitir que la app haga fotos?»
     val pedirPermiso =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
@@ -131,12 +138,12 @@ fun FotoDelAnimal(animal: Animal) {
     ) {
         Text("Hacer una foto de ${animal.nombre}")
     }
-    aviso?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    aviso?.let { Text(it) }
     foto?.let {
         Image(
             bitmap = it.asImageBitmap(),
             contentDescription = "Foto de ${animal.nombre}",
-            modifier = Modifier.fillMaxWidth().height(200.dp).clip(MaterialTheme.shapes.medium),
+            modifier = Modifier.size(200.dp).clip(MaterialTheme.shapes.medium),
             contentScale = ContentScale.Crop
         )
     }

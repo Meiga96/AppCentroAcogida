@@ -21,6 +21,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.centroacogida.ui.theme.CentroAcogidaTheme
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.alpha
+import androidx.compose.runtime.getValue
 
 // TarjetaAnimal.kt
 @Composable
@@ -54,12 +61,21 @@ fun TarjetaAnimal(
                 Text(
                     "${animal.especie} · ${animal.edad} $anios",
                     style = MaterialTheme.typography.bodyMedium
-                )
+                ) // TODO 14.4 cambiar if animal urgente
                 if (animal.urgente) {
+                    // Animación sin fin: la transparencia va de 1 a 0,3 y vuelve, cada 800 ms
+                    val latido = rememberInfiniteTransition(label = "urgente")
+                    val transparencia by latido.animateFloat(
+                        initialValue = 1f,
+                        targetValue = 0.3f,
+                        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse),
+                        label = "transparencia"
+                    )
                     Text(
                         "Adopción urgente",
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.alpha(transparencia)
                     )
                 }
             }

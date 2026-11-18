@@ -210,3 +210,13 @@ DataStore es para preferencias pequeñas clave-valor, por ejemplo guardar el int
 Un permiso normal se concede al instalar y no es sensible (por ejemplo INTERNET). Uno peligroso afecta a la privacidad y se pide en ejecución (por ejemplo CAMERA). Respuestas posibles: permitir mientras se usa la app, permitir solo esta vez, o denegar.
 24. ¿Qué hace falta para que una app hable con un servicio web y por qué HTTPS? ¿Qué diferencia hay entre un APK y un AAB, y entre una versión de depuración y una de publicación?
 Hace falta el permiso INTERNET y una biblioteca de red (Retrofit, Ktor, etc.). Se usa HTTPS para cifrar la comunicación y evitar que se lean o modifiquen los datos. Un APK es el paquete instalable directo, y un AAB es el formato que se sube a Google Play, que genera APKs optimizados por dispositivo. La versión de depuración permite depurar y no va firmada para publicar, mientras que la de publicación está firmada y optimizada
+
+Nota personal sobre el punto 12.3 saber explicar por qué el sensor se quita en onDispose:
+Utilizamos onDispose para liberar el sensor cuando el componente deja de estar activo. Dentro llamamos a unregisterListener(), que deja de recibir los datos del sensor. Esto evita un consumo innecesario de batería, previene posibles fugas de memoria y garantiza que el sensor solo esté funcionando cuando realmente lo necesitamos.
+
+Nota personal sobre el punto 14.4 de saber explicar qué parte del código procesa la foto y cuál la convierte, y por qué se llama a release():
+La parte que procesa la fotografía es la que analiza y trabaja con los píxeles de la imagen. La parte que la convierte cambia su formato, por ejemplo, de Mat de OpenCV a Bitmap de Android, para poder mostrarla en pantalla. Finalmente, llamamos a release() para liberar la memoria nativa utilizada por OpenCV y evitar consumir recursos innecesariamente.
+
+Punto 15.1
+Línea D: Animales cargados de Internet: 10
+Línea E: No se ha podido cargar la lista

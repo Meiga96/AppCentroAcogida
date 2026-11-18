@@ -21,8 +21,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
@@ -45,7 +47,12 @@ fun PantallaSolicitud(
     val errorEmail = if (form.intentadoEnviar) form.errorEmail else null
     val errorTelefono = if (form.intentadoEnviar) form.errorTelefono else null
     val errorCondiciones = if (form.intentadoEnviar) form.errorCondiciones else null
-
+    // TODO Paso 14.3
+    // Cuando la solicitud pasa a enviada, suena una vez
+    val context = LocalContext.current
+    LaunchedEffect(form.enviado) {
+        if (form.enviado) reproducirSonido(context, R.raw.adoptado)
+    }
     Scaffold(
         topBar = {
             TopAppBar(

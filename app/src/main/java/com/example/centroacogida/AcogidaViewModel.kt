@@ -2,6 +2,7 @@ package com.example.centroacogida
 
 // AcogidaViewModel.kt
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +19,32 @@ class AcogidaViewModel(application: Application) : AndroidViewModel(application)
     private val dao = AcogidaDatabase.obtener(application).solicitudDao()
     private val _uiState = MutableStateFlow(AcogidaUiState())
     val uiState: StateFlow<AcogidaUiState> = _uiState.asStateFlow()
+    // TODO 11.5 pedir la lista al crear el ViewModel y cada vez que se llama a cargaAnimales():
+    // Al crear el ViewModel, se pide la lista a Internet
+    init {
+        cargarAnimales()
+    }
+
+    // Pide la lista de animales al servidor, en una corrutina (fuera del hilo principal)
+    fun cargarAnimales() {
+        // Si ya se está cargando (por ejemplo, al agitar el móvil varias veces), no se empieza otra carga
+        if (_uiState.value.cargando) return
+        _uiState.update { it.copy(cargando = true, aviso = null) }
+
+        viewModelScope.launch {
+            try {
+                val lista = Red.servicio.animales()
+                Log.d("CentroAcogida", "Animales cargados de Internet: ${lista.size}")
+                _uiState.update { it.copy(animales = lista, aviso = "Lista actualizada: ${lista.size} animales") }
+            } catch (e: Exception) {
+                // Sin conexión, error del servidor o JSON inesperado: se quedan los animales que ya había
+                Log.e("CentroAcogida", "No se ha podido cargar la lista", e)
+                _uiState.update { it.copy(aviso = "No se ha podido actualizar la lista: se muestran los animales guardados en la app") }
+            } finally {
+                _uiState.update { it.copy(cargando = false) }
+            }
+        }
+    }
 
     val solicitudes: StateFlow<List<Solicitud>> = dao.todas()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
